@@ -1,10 +1,9 @@
 [package]
 name = "windows-taskscheduler"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["scrubjay55"]
-edition = "2018"
+edition = "2021"
 
-
-[dependencies]
-bindings = { path = "bindings" }
-windows = "0.18"
+[dependencies.windows]
+version = "0.34"
+features = ["Win32_System_Com", "Win32_System_TaskScheduler", "Win32_System_Ole", "Win32_Foundation"]

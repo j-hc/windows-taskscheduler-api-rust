@@ -1,20 +1,18 @@
-use crate::variant_d::to_bstr;
-use bindings::Windows::Win32::Foundation::BSTR;
-
+use windows::Win32::Foundation::BSTR;
 
 pub struct TaskAction {
-    pub id: BSTR,
-    pub path: BSTR,
-    pub working_dir: BSTR,
-    pub args: BSTR
+    pub(crate) id: BSTR,
+    pub(crate) path: BSTR,
+    pub(crate) working_dir: BSTR,
+    pub(crate) args: BSTR,
 }
 impl TaskAction {
     pub fn new(id: &str, path: &str, working_dir: &str, args: &str) -> Self {
-        Self{
-            id: to_bstr(id),
-            path: to_bstr(path),
-            working_dir: to_bstr(working_dir),
-            args: to_bstr(args)
+        Self {
+            id: id.into(),
+            path: path.into(),
+            working_dir: working_dir.into(),
+            args: args.into(),
         }
     }
 }
