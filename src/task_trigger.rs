@@ -1,38 +1,49 @@
-use crate::variant_d::to_bstr;
-use bindings::Windows::Win32::Foundation::BSTR;
-
+use std::time::Duration;
+use windows::Win32::Foundation::BSTR;
 
 pub struct TaskIdleTrigger {
-    pub id: BSTR,
-    pub repetition_interval: BSTR,
-    pub repetition_stop_at_duration_end: i16
+    pub(crate) id: BSTR,
+    pub(crate) repetition_interval: BSTR,
+    pub(crate) repetition_stop_at_duration_end: i16,
+    pub(crate) execution_time_limit: BSTR,
 }
 impl TaskIdleTrigger {
-    pub fn new(id: &str, repetition_interval: u32, repetition_stop_at_duration_end: bool) -> Self {
-        let repetition_stop_at_duration_end: i16 = if repetition_stop_at_duration_end {1} else {0};
+    pub fn new(
+        id: &str,
+        repetition_interval: Duration,
+        repetition_stop_at_duration_end: bool,
+        execution_time_limit: Duration,
+    ) -> Self {
         Self {
-            id: to_bstr(id),
-            repetition_interval: to_bstr(&format!("PT{}M", repetition_interval)),
-            repetition_stop_at_duration_end,
+            id: id.into(),
+            repetition_interval: format!("PT{}S", repetition_interval.as_secs()).into(),
+            repetition_stop_at_duration_end: repetition_stop_at_duration_end as i16,
+            execution_time_limit: format!("PT{}S", execution_time_limit.as_secs()).into(),
         }
     }
 }
 
-
 pub struct TaskLogonTrigger {
-    pub id: BSTR,
-    pub repetition_interval: BSTR,
-    pub repetition_stop_at_duration_end: i16,
-    pub delay: BSTR
+    pub(crate) id: BSTR,
+    pub(crate) repetition_interval: BSTR,
+    pub(crate) repetition_stop_at_duration_end: i16,
+    pub(crate) execution_time_limit: BSTR,
+    pub(crate) delay: BSTR,
 }
-impl TaskLogonTrigger{
-    pub fn new(id: &str, repetition_interval: u32, repetition_stop_at_duration_end: bool, delay: u32) -> Self {
-        let repetition_stop_at_duration_end: i16 = if repetition_stop_at_duration_end {1} else {0};
+impl TaskLogonTrigger {
+    pub fn new(
+        id: &str,
+        repetition_interval: Duration,
+        repetition_stop_at_duration_end: bool,
+        execution_time_limit: Duration,
+        delay: Duration,
+    ) -> Self {
         Self {
-            id: to_bstr(id),
-            repetition_interval: to_bstr(&format!("PT{}M", repetition_interval)),
-            repetition_stop_at_duration_end,
-            delay: to_bstr(&format!("PT{}M", delay))
+            id: id.into(),
+            repetition_interval: format!("PT{}S", repetition_interval.as_secs()).into(),
+            repetition_stop_at_duration_end: repetition_stop_at_duration_end as i16,
+            execution_time_limit: format!("PT{}S", execution_time_limit.as_secs()).into(),
+            delay: format!("PT{}S", delay.as_secs()).into(),
         }
     }
 }
