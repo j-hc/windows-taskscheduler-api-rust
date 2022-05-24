@@ -8,7 +8,8 @@ In your Cargo.toml
 windows-taskscheduler = { git = "https://github.com/j-hc/windows-taskscheduler-api-rust.git" }
 ```
 
-Example: 
+Also have a look at the [example here](/examples/open_notepad.rs)
+#
 ```rust
 use std::time::Duration;
 use windows_taskscheduler::task_action::TaskAction;

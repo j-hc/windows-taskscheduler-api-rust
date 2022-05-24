@@ -67,23 +67,19 @@ impl RegisteredTask {
     }
 
     pub fn last_task_result_raw(&self) -> Result<i32> {
-        // TODO: support variants
         unsafe { self.registered_task.LastTaskResult() }
     }
     pub fn number_of_missed_runs(&self) -> Result<i32> {
-        // TODO: support variants
         unsafe { self.registered_task.NumberOfMissedRuns() }
     }
 
     pub fn next_run_time(&self) -> Result<Duration> {
-        // TODO: support variants
         unsafe {
             let nrt = self.registered_task.NextRunTime()? as u64;
             Ok(Duration::from_millis(nrt))
         }
     }
     pub fn xml(&self) -> Result<String> {
-        // TODO: support variants
         unsafe { self.registered_task.Xml().map(|s| s.to_string()) }
     }
 

@@ -70,6 +70,15 @@ impl Task {
         }
     }
 
+    pub fn from_xml(self, xml: String) -> Result<Self> {
+        unsafe {
+            let task_service = Self::get_task_service()?;
+            let task_definition: ITaskDefinition = task_service.NewTask(0)?;
+            task_definition.SetXmlText(BSTR::from(xml))?;
+        }
+        Ok(self)
+    }
+
     pub fn register(self, name: &str) -> Result<RegisteredTask> {
         unsafe {
             let registered_task = self.folder.RegisterTaskDefinition(
