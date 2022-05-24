@@ -4,7 +4,15 @@ version = "0.1.1"
 authors = ["scrubjay55"]
 edition = "2021"
 
+[[bin]]
+name = "open_notepad"
+path = "examples/open_notepad.rs"
 
 [dependencies.windows]
-version = "0.34"
-features = ["Win32_System_Com", "Win32_System_TaskScheduler", "Win32_System_Ole", "Win32_Foundation"]
+version = "0.37"
+features = [
+    "Win32_System_Com",
+    "Win32_System_TaskScheduler",
+    "Win32_System_Ole",
+    "Win32_Foundation",
+]

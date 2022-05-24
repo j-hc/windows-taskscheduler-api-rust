@@ -1,23 +1,24 @@
-use windows::Win32::System::Com::{
-    CoCreateInstance, CoInitializeEx, CLSCTX_ALL, COINIT_MULTITHREADED,
-};
+pub mod task_action;
+pub mod task_settings;
+pub mod task_trigger;
 
+use crate::task::task_action::TaskAction;
+use crate::task::task_settings::TaskSettings;
+use crate::RegisteredTask;
+use task_trigger::{TaskIdleTrigger, TaskLogonTrigger};
+
+use windows::core::{Interface, Result};
 use windows::Win32::Foundation::BSTR;
-use windows::Win32::System::Com::VARIANT;
+use windows::Win32::System::Com::{
+    CoCreateInstance, CoInitializeEx, CLSCTX_ALL, COINIT_MULTITHREADED, VARIANT,
+};
 use windows::Win32::System::TaskScheduler::{
     IAction, IActionCollection, IExecAction, IIdleSettings, IIdleTrigger, ILogonTrigger,
-    IPrincipal, IRegisteredTask, IRegistrationInfo, IRepetitionPattern, ITaskDefinition,
-    ITaskFolder, ITaskService, ITaskSettings, ITriggerCollection, TaskScheduler, TASK_ACTION_EXEC,
-    TASK_CREATE_OR_UPDATE, TASK_LOGON_INTERACTIVE_TOKEN, TASK_RUNLEVEL_HIGHEST, TASK_RUNLEVEL_LUA,
-    TASK_TRIGGER_IDLE, TASK_TRIGGER_LOGON,
+    IPrincipal, IRegistrationInfo, IRepetitionPattern, ITaskDefinition, ITaskFolder, ITaskService,
+    ITaskSettings, ITriggerCollection, TaskScheduler, TASK_ACTION_EXEC, TASK_CREATE_OR_UPDATE,
+    TASK_LOGON_INTERACTIVE_TOKEN, TASK_RUNLEVEL_HIGHEST, TASK_RUNLEVEL_LUA, TASK_TRIGGER_IDLE,
+    TASK_TRIGGER_LOGON,
 };
-
-use crate::task_action::TaskAction;
-use crate::task_settings::TaskSettings;
-use crate::task_trigger::{TaskIdleTrigger, TaskLogonTrigger};
-use crate::Result;
-
-use windows::core::Interface;
 
 pub enum RunLevel {
     HIGHEST,
@@ -33,7 +34,7 @@ pub struct Task {
     folder: ITaskFolder,
 }
 impl Task {
-    pub fn new(path: &str) -> Result<Self> {
+    fn get_task_service() -> Result<ITaskService> {
         unsafe {
             CoInitializeEx(std::ptr::null_mut(), COINIT_MULTITHREADED)?;
             let task_service: ITaskService = CoCreateInstance(&TaskScheduler, None, CLSCTX_ALL)?;
@@ -43,6 +44,13 @@ impl Task {
                 VARIANT::default(),
                 VARIANT::default(),
             )?;
+            Ok(task_service)
+        }
+    }
+
+    pub fn new(path: &str) -> Result<Self> {
+        unsafe {
+            let task_service = Self::get_task_service()?;
 
             let task_definition: ITaskDefinition = task_service.NewTask(0)?;
             let triggers: ITriggerCollection = task_definition.Triggers()?;
@@ -62,9 +70,9 @@ impl Task {
         }
     }
 
-    pub fn register(self, name: &str) -> Result<()> {
+    pub fn register(self, name: &str) -> Result<RegisteredTask> {
         unsafe {
-            self.folder.RegisterTaskDefinition(
+            let registered_task = self.folder.RegisterTaskDefinition(
                 BSTR::from(name),
                 &self.task_definition,
                 TASK_CREATE_OR_UPDATE.0,
@@ -74,28 +82,22 @@ impl Task {
                 None,
             )?;
             self.settings.SetEnabled(1)?;
+            Ok(RegisteredTask { registered_task })
         }
-        Ok(())
     }
 
     pub fn set_hidden(self, is_hidden: bool) -> Result<Self> {
-        unsafe {
-            self.settings.SetHidden(is_hidden as i16)?;
-        }
+        unsafe { self.settings.SetHidden(is_hidden as i16)? }
         Ok(self)
     }
 
     pub fn author(self, author: &str) -> Result<Self> {
-        unsafe {
-            self.reg_info.SetAuthor(BSTR::from(author))?;
-        }
+        unsafe { self.reg_info.SetAuthor(BSTR::from(author))? }
         Ok(self)
     }
 
     pub fn description(self, description: &str) -> Result<Self> {
-        unsafe {
-            self.reg_info.SetDescription(BSTR::from(description))?;
-        }
+        unsafe { self.reg_info.SetDescription(BSTR::from(description))? }
         Ok(self)
     }
 
@@ -179,11 +181,21 @@ impl Task {
         Ok(self)
     }
 
-    pub fn get_task(self, name: &str) -> Result<IRegisteredTask> {
-        unsafe { self.folder.GetTask(BSTR::from(name)) }
+    pub fn get_task(path: &str, name: &str) -> Result<RegisteredTask> {
+        unsafe {
+            let task_service = Self::get_task_service()?;
+            let folder = task_service.GetFolder(BSTR::from(path))?;
+            let registered_task = folder.GetTask(BSTR::from(name))?;
+            Ok(RegisteredTask { registered_task })
+        }
     }
 
-    pub fn delete_task(self, name: &str) -> Result<()> {
-        unsafe { self.folder.DeleteTask(BSTR::from(name), 0) }
+    pub fn delete_task(path: &str, name: &str) -> Result<()> {
+        unsafe {
+            let task_service = Self::get_task_service()?;
+            let folder = task_service.GetFolder(BSTR::from(path))?;
+            folder.DeleteTask(BSTR::from(name), 0)?;
+        }
+        Ok(())
     }
 }

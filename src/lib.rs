@@ -1,7 +1,13 @@
-pub mod task;
+mod task;
+pub use task::{
+    task_action::TaskAction,
+    task_settings::TaskSettings,
+    task_trigger::{TaskIdleTrigger, TaskLogonTrigger},
+    RunLevel, Task,
+};
 
-pub mod task_action;
-pub mod task_settings;
-pub mod task_trigger;
+mod registered_task;
+pub use registered_task::{RegisteredTask, TaskState};
 
+pub use windows::core::Error;
 pub use windows::core::Result;
