@@ -35,8 +35,10 @@ pub struct Task {
 }
 impl Task {
     fn get_task_service() -> Result<ITaskService> {
+        // im probably leaking com objects memory by not releasing them but meh
         unsafe {
             CoInitializeEx(std::ptr::null_mut(), COINIT_MULTITHREADED)?;
+
             let task_service: ITaskService = CoCreateInstance(&TaskScheduler, None, CLSCTX_ALL)?;
             task_service.Connect(
                 VARIANT::default(),

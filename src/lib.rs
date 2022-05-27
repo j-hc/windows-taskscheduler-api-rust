@@ -9,5 +9,5 @@ pub use task::{
 mod registered_task;
 pub use registered_task::{RegisteredTask, TaskState};
 
-pub use windows::core::Error;
-pub use windows::core::Result;
+pub use windows::core::{Error, Result};
+pub use windows::Win32::Foundation::SYSTEMTIME;

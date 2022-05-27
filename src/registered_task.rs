@@ -1,6 +1,6 @@
 use std::time::Duration;
 use windows::core::Result;
-use windows::Win32::Foundation::BSTR;
+use windows::Win32::Foundation::{BSTR, SYSTEMTIME};
 use windows::Win32::System::TaskScheduler::{
     IRegisteredTask, IRunningTask, TASK_STATE_DISABLED, TASK_STATE_QUEUED, TASK_STATE_READY,
     TASK_STATE_RUNNING, TASK_STATE_UNKNOWN,
@@ -12,6 +12,15 @@ pub enum TaskState {
     TaskStateQueued,
     TaskStateReady,
     TaskStateRunning,
+}
+
+fn date_to_dur(oledate: f64) -> Duration {
+    let mut num: i64 = ((oledate * 86400000.0) + (if oledate >= 0.0 { 0.5 } else { -0.5 })) as i64;
+    if num < 0 {
+        num -= (num % 0x5265c00) * 2;
+    }
+    num += 0x3680b5e1fc00 - 0x3883122cd800;
+    Duration::from_secs(num as u64)
 }
 
 pub struct RegisteredTask {
@@ -61,9 +70,9 @@ impl RegisteredTask {
         }
     }
 
-    pub fn last_run_time(&self) -> Result<f64> {
-        // TODO: convert COM DATE (f64) to std::Duration
-        unsafe { self.registered_task.LastRunTime() }
+    pub fn last_run_time(&self) -> Result<Duration> {
+        let date = unsafe { self.registered_task.LastRunTime()? };
+        Ok(date_to_dur(date))
     }
 
     pub fn last_task_result_raw(&self) -> Result<i32> {
@@ -74,19 +83,50 @@ impl RegisteredTask {
     }
 
     pub fn next_run_time(&self) -> Result<Duration> {
-        unsafe {
-            let nrt = self.registered_task.NextRunTime()? as u64;
-            Ok(Duration::from_millis(nrt))
-        }
+        let date = unsafe { self.registered_task.NextRunTime()? };
+        Ok(date_to_dur(date))
     }
+
     pub fn xml(&self) -> Result<String> {
         unsafe { self.registered_task.Xml().map(|s| s.to_string()) }
     }
 
-    // pub fn definiton() -> () {}
-    // pub fn get_instances() -> () {}
-    // pub fn get_security_descriptor() -> () {}
-    // pub fn set_security_descriptor() -> () {}
-    // pub fn stop() -> () {}
-    // pub fn get_run_times() -> () {}
+    pub fn stop(&self) -> Result<()> {
+        unsafe { self.registered_task.Stop(0)? };
+        Ok(())
+    }
+
+    pub fn get_run_times(
+        &self,
+        pst_start: &SYSTEMTIME,
+        pst_end: &SYSTEMTIME,
+    ) -> Result<(u32, SYSTEMTIME)> {
+        unsafe {
+            let mut pcount = 0;
+            let mut pruntimes = SYSTEMTIME::default();
+
+            // let systime_def = SYSTEMTIME {
+            //     wYear: 1601,
+            //     wDay: 1,
+            //     wMonth: 1,
+            //     ..Default::default()
+            // };
+            // let systime_infinite = SYSTEMTIME {
+            //     wYear: 30827,
+            //     wDay: 1,
+            //     wMonth: 1,
+            //     ..Default::default()
+            // };
+            // let pst_start = pst_start.unwrap_or(&systime_def);
+            // let pst_end = pst_end.unwrap_or(&systime_infinite);
+
+            self.registered_task.GetRunTimes(
+                pst_start as *const SYSTEMTIME,
+                pst_end as *const SYSTEMTIME,
+                &mut pcount as *mut u32,
+                &mut pruntimes as *mut _ as *mut _,
+            )?;
+            Ok((pcount, pruntimes))
+        }
+    }
 }
