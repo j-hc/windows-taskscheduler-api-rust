@@ -12,13 +12,10 @@ Also have a look at the [example here](/examples/open_notepad.rs)
 #
 ```rust
 use std::time::Duration;
-use windows_taskscheduler::task_action::TaskAction;
-use windows_taskscheduler::{
-    task::{RunLevel, Task},
-    task_trigger,
-};
+use windows_taskscheduler::{TaskAction, RunLevel, Task, TaskIdleTrigger};
 
-let trigger = task_trigger::TaskIdleTrigger::new(
+
+let trigger = TaskIdleTrigger::new(
     "idletrigger",
     Duration::from_secs(3 * 60),
     true,
@@ -31,4 +28,5 @@ Task::new(r"\")?
     .principal(RunLevel::LUA, "", "")?
     .set_hidden(false)?
     .register("open notepad when idle")?;
+
 ```
