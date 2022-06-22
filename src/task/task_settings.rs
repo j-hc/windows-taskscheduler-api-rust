@@ -29,6 +29,7 @@ pub struct TaskSettings {
     pub(crate) wake_to_run: i16,
     pub(crate) execution_time_limit: BSTR,
     pub(crate) disallow_start_if_on_batteries: i16,
+    pub(crate) allow_hard_terminate: i16,
 }
 impl TaskSettings {
     pub fn new(
@@ -37,6 +38,7 @@ impl TaskSettings {
         wake_to_run: bool,
         execution_time_limit: Duration,
         disallow_start_if_on_batteries: bool,
+        allow_hard_terminate: bool,
     ) -> Self {
         Self {
             idle_settings,
@@ -44,6 +46,7 @@ impl TaskSettings {
             wake_to_run: wake_to_run as i16,
             execution_time_limit: format!("PT{}S", execution_time_limit.as_secs()).into(),
             disallow_start_if_on_batteries: disallow_start_if_on_batteries as i16,
+            allow_hard_terminate: allow_hard_terminate as i16,
         }
     }
 }

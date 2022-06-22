@@ -3,10 +3,6 @@ name = "windows-taskscheduler"
 version = "0.2.0"
 edition = "2021"
 
-[[bin]]
-name = "open_notepad"
-path = "examples/open_notepad.rs"
-
 [dependencies.windows]
 version = "0.37"
 features = [

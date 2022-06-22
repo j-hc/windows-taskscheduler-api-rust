@@ -167,6 +167,8 @@ impl Task {
                 .SetExecutionTimeLimit(task_settings.execution_time_limit)?;
             self.settings
                 .SetDisallowStartIfOnBatteries(task_settings.disallow_start_if_on_batteries)?;
+            self.settings
+                .SetAllowHardTerminate(task_settings.allow_hard_terminate)?;
 
             if let Some(idle_settings) = task_settings.idle_settings {
                 let idle_s: IIdleSettings = self.settings.IdleSettings()?;
